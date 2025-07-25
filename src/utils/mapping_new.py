@@ -3,7 +3,7 @@ import torch
 from src.data.get_datasets import get_cifar100, cifar100_pair_dataset, imagenette_pair_dataset, cifar10_pair_dataset, get_mmimdb_pair_dataset, get_fhmd
 from src.modules.cnn import FlexibleCNN
 from src.modules.resnets import BimodalResNet
-from src.modules.models import FusionMLP_BN
+from src.modules.models import FusionMLP_BN, FusionMLP_EXE
 from src.modules.models_pretrained import ResnetEncoder, TextEncoder
 
 DATASET_NAME_MAP = {
@@ -20,6 +20,7 @@ MODEL_NAME_MAP = {
     'flexible_cnn': FlexibleCNN,
     'resnet': BimodalResNet,
     'fusion_mlp_bn': FusionMLP_BN,
+    'fusion_mlp_exe': FusionMLP_EXE,
     'resnet_encoder_pretrained': ResnetEncoder,
     'text_encoder_pretrained': TextEncoder
 }

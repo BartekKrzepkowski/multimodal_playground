@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     hyperparameters = {
         'optim_name': ['adamw'],
-        'lr': [1e-5, 3e-5, 1e-4, 3e-4],
+        'lr': [1e-4, 3e-4],
         'weight_decay': [1e-4],
         'scheduler_name': [None],
         'hidden_dim': [256],
@@ -140,7 +140,7 @@ if __name__ == "__main__":
                 'device': device,
                 'seed': 83,
                 'n_epochs': 400,
-                'exp_name': f'mm_imbd_{lr=}_{weight_decay=}_{optim_name=}_{hidden_dim=}_bce_resnet34', # nazwa eksperymentu, która będzie użyta do tworzenia folderów i logowania
+                'exp_name': f'mm_imbd_{lr=}_{weight_decay=}_{optim_name=}_{hidden_dim=}_bce_resnet34_exe', # nazwa eksperymentu, która będzie użyta do tworzenia folderów i logowania
                 'custom_root': os.environ['REPORTS_DIR'],     # custom root directory for saving logs and checkpoints
                 'load_checkpoint_path': None,    # saving checkpoint of model and optimizer
                 'save_checkpoint_modulo': 50,  # how many epochs to save the model,
@@ -154,14 +154,16 @@ if __name__ == "__main__":
                 'loader_params': {'batch_size': 125, 'pin_memory': True, 'num_workers': 12}
             }
             model_params = {
-                'model_name': 'fusion_mlp_bn',
+                'model_name': 'fusion_mlp_exe',
                 'model_params': {
                     'img_dim': 512,  # dimension of image features
                     'txt_dim': 768,  # dimension of text features
+                    'proj_dim': 256,  # dimension of projection layer
+                    'res_hidden_dim': 512,  # hidden dimension for residual MLP
+                    'fusion_hidden_dim': hidden_dim,  # hidden dimension for fusion MLP
                     'num_labels': 1,  # number of labels for classification
-                    'hidden_dim': hidden_dim,  # hidden dimension for MLP
                     'dropout': 0.2,  # dropout rate
-                    'sigma': 0.0,  # noise level for augmentation
+                    # 'sigma': 0.0,  # noise level for augmentation
                     'additional_params': {
                         'encoder1_params': {
                             'model_name': 'resnet_encoder_pretrained',
@@ -198,7 +200,7 @@ if __name__ == "__main__":
             }
             criterion_params = {
                 'criterion_name': 'bce_with_logits',
-                'criterion_params': {'pos_weight': torch.tensor([5450 / 3050])},
+                'criterion_params': {'pos_weight': torch.tensor([5450 / 3050]).to(device)},
                 # 'criterion_params': {'reduction': 'none', 'label_smoothing': 0.1},
             }
             logger_params = {

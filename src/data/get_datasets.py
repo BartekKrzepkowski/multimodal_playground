@@ -8,7 +8,7 @@ from torchvision import datasets
 from torch.utils.data import Subset
 from tqdm import tqdm
 
-from src.data.datasets import FHMDataset
+from src.data.datasets import FHMDataset, MultiViewModelNet40
 
 
 def get_cifar100(dataset_path=None, **kwargs):
@@ -338,5 +338,47 @@ def get_fhmd(img_size=256):
     train_dataset = FHMDataset(f'{root_path}/train.jsonl', f'{root_path}/imgs', img_transform=train_transform_img, text_transform=train_transform_text)
     val_dataset = FHMDataset(f'{root_path}/dev.jsonl', f'{root_path}/imgs', img_transform=val_transform_img, text_transform=None)
     test_dataset = FHMDataset(f'{root_path}/test.jsonl', f'{root_path}/imgs', img_transform=val_transform_img, text_transform=None) # to i tak nie ma sensu, bo nie ma etykiet
+
+    return train_dataset, val_dataset, test_dataset
+
+
+
+def get_loaders(
+    root_dir,
+    valid_size=0.2,
+    num_views=12,
+    specific_views=None,
+):
+    """
+    Zwraca 3 DataLoadery: train, val, test
+    """
+    normalize = T.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+    train_transform = T.Compose([
+        T.ToPILImage(),
+        T.RandomHorizontalFlip(),
+        T.ToTensor(),
+        normalize,
+    ])
+
+    test_transform = T.Compose([
+        T.ToPILImage(),
+        T.ToTensor(),
+        normalize,
+    ])
+
+    train_set = MultiViewModelNet40(root_dir, 'train', num_views, specific_views, train_transform)
+    test_dataset = MultiViewModelNet40(root_dir, 'test', num_views, specific_views, test_transform)
+
+    # Split train into train/val
+    n = len(train_set)
+    indices = np.arange(n)
+    np.random.shuffle(indices)
+    split = int(valid_size * n)
+    val_idx, train_idx = indices[:split], indices[split:]
+
+    train_dataset = Subset(train_set, train_idx)
+    val_dataset = Subset(train_set, val_idx)
 
     return train_dataset, val_dataset, test_dataset

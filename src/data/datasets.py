@@ -5,6 +5,7 @@ import random
 import os
 
 import numpy as np
+import torch
 import torchvision.transforms as T
 from PIL import Image
 from torch.utils.data import Dataset
@@ -142,3 +143,55 @@ class FHMDataset(Dataset):
             text = self.text_transform(text) if random.random() < 0.5 else text
 
         return img, text, label
+    
+import glob
+
+
+class MultiViewModelNet40(Dataset):
+    def __init__(self, root_dir, split='train', num_views=12, specific_views=None, transform=None):
+        """
+        root_dir: katalog główny z danymi ModelNet40
+        split: 'train' lub 'test'
+        specific_views: np. [0,6] = tylko pierwszy i siódmy widok
+        """
+        CLASSES = [
+            'airplane','bathtub','bed','bench','bookshelf','bottle','bowl','car','chair',
+            'cone','cup','curtain','desk','door','dresser','flower_pot','glass_box','guitar',
+            'keyboard','lamp','laptop','mantel','monitor','night_stand','person','piano',
+            'plant','radio','range_hood','sink','sofa','stairs','stool','table','tent',
+            'toilet','tv_stand','vase','wardrobe','xbox'
+        ]
+        self.classnames = CLASSES
+        self.root_dir = os.path.join(root_dir, split)
+        self.num_views = num_views
+        self.specific_views = specific_views
+        self.transform = transform
+
+        self.samples = []
+        for class_idx, class_name in enumerate(self.classnames):
+            class_path = os.path.join(self.root_dir, class_name)
+            npy_files = sorted(glob.glob(os.path.join(class_path, "*.npy")))
+            for f in npy_files:
+                self.samples.append((f, class_idx))
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, idx):
+        npy_path, class_id = self.samples[idx]
+        views = torch.load(npy_path)  # numpy array (num_views, H, W, C)
+        # Wybierz konkretne widoki jeśli podano
+        if self.specific_views is not None:
+            views = views[self.specific_views]
+        # Przekształć na tensory i normalizuj każdy widok
+        view_tensors = []
+        for img in views:
+            img = Image.fromarray(img)
+            if self.transform:
+                img = self.transform(img)
+            else:
+                img = T.ToTensor()(img)
+            view_tensors.append(img)
+        # Stackujemy do (num_views, C, H, W)
+        data = torch.stack(view_tensors)
+        return data, class_id
