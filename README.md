@@ -1,7 +1,4 @@
 
----
-
-```markdown
 # multimodal_playground
 
 A small **`playground`** repository for quick prototyping of **multimodal training / evaluation** ideas.
