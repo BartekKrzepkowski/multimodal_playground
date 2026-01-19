@@ -1,5 +1,3 @@
-# multimodal_playground
-
 
 ---
 
